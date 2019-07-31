@@ -1,7 +1,9 @@
 ﻿
 using System;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Threading.Tasks;
 using Dominio;
@@ -10,7 +12,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Migrator;
 using Repositorio.Repositorio;
-using System.Data.SqlClient;
 
 namespace ConsoleApp
 {
@@ -20,6 +21,11 @@ namespace ConsoleApp
 
         static async Task Main(string[] args)
         {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            ConsoleWrite.Color("======================================================================================================", ConsoleColor.Yellow);
+            ConsoleWrite.Color("Configurando Nhibernate com FluentNHibernate, Teste de Mapeamento do FluentNhibernate e FluentMigrator", ConsoleColor.Yellow);
+            ConsoleWrite.Color("======================================================================================================", ConsoleColor.Yellow);
+
             var builder = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
@@ -32,25 +38,16 @@ namespace ConsoleApp
             {
                 UpdateDatabase(scope.ServiceProvider);
             }
-            await Connection();
+
+            await ConnectionPessoa();
+            await ConnectionAnimal();
         }
 
-        public static async Task Connection()
+        public static async Task ConnectionPessoa()
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("======================================================================================================");
-            Console.WriteLine("Configurando Nhibernate com FluentNHibernate, Teste de Mapeamento do FluentNhibernate e FluentMigrator");
-            Console.WriteLine("======================================================================================================");
-            Console.WriteLine("");
-            
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
-            
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("Abrindo Conexão com o Banco de Dados");
-
             using (var db = new SessionHelper(connectionString))
             {
-                //Criar Pessoa Fisica
                 var pessoaFisica = new PessoaFisica();
                 await db.Session.SaveOrUpdateAsync(pessoaFisica.New());
 
@@ -58,6 +55,39 @@ namespace ConsoleApp
                 await db.Session.SaveOrUpdateAsync(pessoaJuridica.New());
 
                 await db.Session.FlushAsync();
+
+                var pessoas = db.Session.Query<Pessoa>().Count();
+                ConsoleWrite.Color($"Quantidade de entidades do tipo Pessoa: {pessoas}", ConsoleColor.Green);
+
+                var pessoasFisicas = db.Session.Query<PessoaFisica>().Count();
+                ConsoleWrite.Color($"Quantidade de entidades do tipo PessoaFisica: {pessoasFisicas}", ConsoleColor.Green);
+
+                var pessoasJuridicas = db.Session.Query<PessoaJuridica>().Count();
+                ConsoleWrite.Color($"Quantidade de entidades do tipo PessoaJuridica: {pessoasJuridicas}", ConsoleColor.Green);
+            }
+        }
+
+        public static async Task ConnectionAnimal()
+        {
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            using (var db = new SessionHelper(connectionString))
+            {
+                var cachorro = new Cachorro();
+                await db.Session.SaveOrUpdateAsync(cachorro.New());
+
+                var papagaio = new Papagaio();
+                await db.Session.SaveOrUpdateAsync(papagaio.New());
+
+                await db.Session.FlushAsync();
+
+                var animais = db.Session.Query<Animal>().Count();
+                ConsoleWrite.Color($"Quantidade de entidades do tipo Animal: {animais}", ConsoleColor.Green);
+
+                var cachorros = db.Session.Query<Cachorro>().Count();
+                ConsoleWrite.Color($"Quantidade de entidades do tipo Cachorros: {cachorros}", ConsoleColor.Green);
+
+                var papagaios = db.Session.Query<Papagaio>().Count();
+                ConsoleWrite.Color($"Quantidade de entidades do tipo Papagaios: {papagaios}", ConsoleColor.Green);
             }
         }
 
@@ -82,7 +112,7 @@ namespace ConsoleApp
         public static void CreateDatabase()
         {
             var conn = new SqlConnectionStringBuilder(Configuration.GetConnectionString("DefaultConnection"));
-            var rootDir = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..","..",".."));
+            var rootDir = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", ".."));
             var dbName = conn.InitialCatalog;
             var dbServer = conn.DataSource;
             var dbTrusted = conn.IntegratedSecurity;
@@ -110,7 +140,7 @@ namespace ConsoleApp
                 foreach (var result in results)
                 {
                     Debug.Write(result.ToString());
-                    Console.WriteLine(result.ToString());
+                    ConsoleWrite.Color(result.ToString());
                 }
             }
         }
