@@ -1,0 +1,13 @@
+version: '2.1'
+
+services:
+  db:
+    image: "luizcarlosfaria/mssql-server-linux"
+    ports:
+      - "1433:1433"
+    environment:
+        ACCEPT_EULA: "Y"
+        MSSQL_PID: "Developer"
+        SA_PASSWORD: "1234567aA"
+        MSSQL_DATABASE_COLLATE: "SQL_Latin1_General_CP1_CI_AI"
+        MSSQL_DATABASE: "ConfigurandoNHibernate"

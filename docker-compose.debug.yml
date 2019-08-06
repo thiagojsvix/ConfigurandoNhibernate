@@ -1,0 +1,10 @@
+version: '2.1'
+
+services:
+  configurandonhibernate:
+    image: configurandonhibernate
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
